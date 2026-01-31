@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
+use utoipa::{IntoParams, ToSchema};
 
-#[derive(Serialize, Deserialize)]
-pub struct GenericResponse {
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct GenericResponse<T> {
     pub code: String,
-    pub message: String,
+    pub data: T,
 }

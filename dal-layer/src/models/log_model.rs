@@ -2,8 +2,9 @@ use chrono::Utc;
 use mongodb::bson::{DateTime, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 use std::{alloc::System, time::SystemTime};
+use utoipa::ToSchema;
 
-#[derive(Debug, PartialEq, Deserialize, Serialize, Clone)]
+#[derive(Debug, PartialEq, Deserialize, Serialize, Clone, ToSchema)]
 pub enum LogLevel {
     INFO,
     ERROR,
@@ -47,7 +48,7 @@ impl Log {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, ToSchema)]
 pub struct LogRequest {
     pub level: LogLevel,
     pub my_service_id: String,

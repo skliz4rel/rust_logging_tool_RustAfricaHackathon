@@ -100,10 +100,6 @@ pub struct Config {
     pub service_id: Option<String>, //id of the microservice in the database.
 }
 
-impl Config {
-    pub fn pass_service_id_2_config() {}
-}
-
 ///This would read the config file for application name and log location
 pub fn read_config(config_filename: String) -> Result<Vec<Config>, Box<dyn Error>> {
     let data: String = fs::read_to_string(config_filename)?;

@@ -2,6 +2,7 @@ use chrono::Utc;
 use mongodb::bson::{DateTime, oid::ObjectId};
 use serde::{Deserialize, Serialize};
 use std::{alloc::System, time::SystemTime};
+use utoipa::{IntoParams, ToSchema};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MyService {
@@ -30,7 +31,7 @@ impl TryFrom<MyServiceView> for MyService {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct MyServiceView {
     pub service_id: Option<String>,
     pub name: String,
