@@ -1,6 +1,7 @@
 use chrono::Utc;
 use mongodb::bson::{DateTime, oid::ObjectId};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::{alloc::System, time::SystemTime};
 use utoipa::ToSchema;
 
@@ -54,4 +55,10 @@ pub struct LogRequest {
     pub my_service_id: String,
     pub line_content: String,
     pub created_at: String,
+}
+
+impl fmt::Display for LogRequest {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", serde_json::to_string(self).unwrap())
+    }
 }

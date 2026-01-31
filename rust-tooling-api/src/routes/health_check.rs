@@ -4,7 +4,7 @@ use dal_layer::models::response_model::GenericResponse;
 #[utoipa::path(
 	get,
 	path = "/api/healthchecker",
-	tag = "Health Checker Endpoint",
+	tag = "Health",
 	responses(
 		(status=200, description = "The health check endpoint let us konw the microservice is up and running", body = GenericResponse<String>),
 	)
