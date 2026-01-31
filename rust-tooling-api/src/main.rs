@@ -33,7 +33,7 @@ use utoipa::{
     components(
         schemas(
             LogRequest,
-            GenericResponse<LogRequest>,
+            GenericResponse<String>,
             MyServiceView,         
         )
     ),
