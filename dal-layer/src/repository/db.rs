@@ -17,6 +17,8 @@ use mongodb::{IndexModel, options::IndexOptions};
 use std::env;
 use std::str::FromStr;
 
+use mongodb::options::ClientOptions;
+
 pub struct Database {
     log: Collection<Log>,
     myservice: Collection<MyService>,
@@ -25,15 +27,24 @@ pub struct Database {
 impl Database {
     ///This is going to initialize the database
     pub async fn init() -> Self {
-        let uri: String = match env::var("MONGO_URI") {
-            Ok(s) => s.to_string(),
-            Err(_) => {
-                println!("extracting the connection string from here");
-                String::from("mongodb://localhost:27017/?directConnection=true")
-            }
-        };
+        let uri = env::var("MONGO_URI")
+            .unwrap_or_else(|_| "mongodb://localhost:27017/?directConnection=true".into());
 
-        let client: Client = Client::with_uri_str(uri).await.unwrap();
+        // Parse options so we can tune pool settings
+        let mut client_options = ClientOptions::parse(&uri)
+            .await
+            .expect("Failed to parse MongoDB URI");
+
+        client_options.app_name = Some("rust-log-monitor".to_string());
+
+        // 👇 POOL SETTINGS (optional but recommended)
+        client_options.max_pool_size = Some(20); // max concurrent connections
+        client_options.min_pool_size = Some(5); // keep some warm
+        client_options.max_idle_time = Some(std::time::Duration::from_secs(60));
+
+        let client =
+            Client::with_options(client_options).expect("Failed to initialize MongoDB client");
+
         let db = client.database("rust_log_monitor");
 
         let myservice: Collection<MyService> = db.collection("myservice");

@@ -1,6 +1,7 @@
 use chrono::Utc;
 use mongodb::bson::{DateTime, oid::ObjectId};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 use std::{alloc::System, time::SystemTime};
 use utoipa::{IntoParams, ToSchema};
 
@@ -37,6 +38,12 @@ pub struct MyServiceView {
     pub name: String,
     pub description: Option<String>,
     pub onboarded_datetime: Option<String>,
+}
+
+impl fmt::Display for MyServiceView {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", serde_json::to_string(self).unwrap())
+    }
 }
 
 impl MyServiceView {

@@ -38,7 +38,13 @@ use utoipa::{
         )
     ),
     tags(
-        (name = "Rust Logging Tool API", description = "This tools helps manage logs in the cloud for microservices")
+     (name = "Health", description = "Health endpoints"),
+        (name = "Register Service", description = "Register A Micro Service or Monolith Endpoint"),
+		(name = "Get Service", description = "Get MicroServices or Monoliths registered in the Logging system Endpoint"),
+		(name = "Create Logs", description = "Create Logs for a registered Microservice Endpoint"),
+		(name = "Get Logs", description = "Get Logs for a MIcro service Endpoint"),
+		//(name = "Get_logs_Service", description = "Get Logs by service Endpoint"),
+		(name = "Get logs by Service by date", description = "Get logs by service and date Endpoint")
     )
 )]
 pub struct ApiDoc;
@@ -48,7 +54,7 @@ pub struct ApiDoc;
 #[utoipa::path(
 	get,
 	path = "/api/healthchecker",
-	tag = "Health Checker Endpoint",
+	tag = "Health",
 	responses(
 		(status=200, description = "This shows the microservice is up and running", body = Details),
 	)
