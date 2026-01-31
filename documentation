@@ -2,3 +2,36 @@ cargo run -p rust-tooling-api
 
 cargo test -p commons
 
+How to Use
+There are 2 Software components.
+
+1. rust-tooling-api: This is a rest backend api services that exposes rest endpoint for you to view logs or consume logs on a frontend application.
+2. rust-log-collector: This is used for reading logs in form of files. so if u have a service that writes logs to a files. You can specify the name of the service and the path were the logs are written in the config.json
+
+Steps to using it.
+
+1. Ensure you configure the user and password to database in .env
+2. Run cargo run -p rust-tooling-api to start the api
+3. view this http://localhost:5000/swagger-ui/ to access the swagger for api service
+4. register the service that you would like to track the logs.
+5. Open the rust-log-collector, add a config just like I pasted below
+
+{
+"application_name":"microservice name",
+"log_location":"C://Users//GIDI//web3projects//web3-identityserver//microservice_log_location"
+}
+
+Add this to the list. Ensure you specify the exact name used when onboarding the service.
+
+//Run this command
+cargo run -p rust-log-collector
+
+You woudl see the console tool pulling the logs on the screen.
+
+View the logs for the service you just entered. Ensure that the service has logs in the specified folder path.
+
+http://localhost:5000/api/logs/{serviceid}
+
+replace {serviceid} with the id that was returned to you when you registered the service.
+
+Then you would be able to view the logs been pulled from db
