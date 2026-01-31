@@ -10,6 +10,49 @@ use crate::routes::{health_check::*, log_routes::*, myservice_routes::*};
 use dal_layer::models::{log_model::*, my_service_model::*, response_model::*};
 use dal_layer::repository::db::Database;
 
+use utoipa_rapidoc::RapiDoc;
+use utoipa_redoc::{Redoc, Servable};
+use utoipa_swagger_ui::{SwaggerUi, Config};
+
+use utoipa::{
+    Modify, OpenApi,
+    openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme},
+};
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+       health_check,
+        create_service,
+      get_services,
+        create_log,
+        get_logs_byservices,
+   get_logs_services_by_date_range,
+     
+    ),
+    components(
+        schemas(
+            LogRequest,
+            GenericResponse<LogRequest>,
+            MyServiceView,         
+        )
+    ),
+    tags(
+        (name = "Rust Logging Tool API", description = "This tools helps manage logs in the cloud for microservices")
+    )
+)]
+pub struct ApiDoc;
+
+
+
+#[utoipa::path(
+	get,
+	path = "/api/healthchecker",
+	tag = "Health Checker Endpoint",
+	responses(
+		(status=200, description = "This shows the microservice is up and running", body = Details),
+	)
+)]
 #[get("/")]
 async fn hello() -> impl Responder {
     let d: Details = Details {
@@ -30,11 +73,21 @@ async fn main() -> std::io::Result<()> {
             .app_data(db_data.clone()) //register or inject the database obj
             .service(hello)
             .service(health_check)
+    .service(
+    SwaggerUi::new("/swagger-ui/{_:.*}")
+        .url("/api-doc/openapi.json", ApiDoc::openapi())
+         .config(
+            Config::default() 
+            .display_operation_id(true)     // 👈 KEEP TAG ORDER AS DEFINED
+        )
+        
+)
+            .service(create_service)
+            .service(get_services)
             .service(create_log)
             .service(get_logs_byservices)
             .service(get_logs_services_by_date_range)
-            .service(create_service)
-            .service(get_services)
+           
     })
     .bind(("localhost", 5001))?
     .run()

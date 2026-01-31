@@ -5,11 +5,25 @@ use actix_web::{
 use actix_web::{get, post};
 
 use dal_layer::{
-    models::my_service_model::{MyService, MyServiceView},
+    models::{
+        my_service_model::{MyService, MyServiceView},
+        response_model::GenericResponse,
+    },
     repository::db::Database,
 };
 
-#[post("/service")]
+#[utoipa::path(
+	post,
+    tag = "Register Microservices that you want to store logs for",
+	path = "/api/service",
+	request_body(content= MyServiceView, description="End point for saving the microservice which needs log tracking", example= json!({"email":"skliz4rel@gmail.com", "password":"password"})),
+	responses(
+		(status=200, description="Service successfully saved", body=GenericResponse<MyServiceView>),
+		(status=400, description="BadRequest when saving the service", body=GenericResponse<MyServiceView>),
+		(status=500, description="Internal Server Error", body= GenericResponse<String>)
+	)
+	)]
+#[post("/api/service")]
 pub async fn create_service(db: Data<Database>, request: Json<MyServiceView>) -> HttpResponse {
     match db
         .create_service(
@@ -23,15 +37,29 @@ pub async fn create_service(db: Data<Database>, request: Json<MyServiceView>) ->
         )
         .await
     {
-        Ok(myservice) => HttpResponse::Ok().json(myservice),
+        Ok(myservice) => HttpResponse::Ok().json(GenericResponse {
+            code: String::from("200"),
+            data: myservice,
+        }),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
 
-#[get("/services")]
+#[utoipa::path(
+	get,
+	path = "/api/services",
+	tag = "Display registered Microservices",
+	responses(
+		(status=200, description = "This is going to display the list of registered microservices running", body = GenericResponse<Vec<MyServiceView>>),
+	)
+)]
+#[get("/api/services")]
 pub async fn get_services(db: Data<Database>) -> HttpResponse {
     match db.get_services().await {
-        Ok(services) => HttpResponse::Ok().json(services),
+        Ok(services) => HttpResponse::Ok().json(GenericResponse {
+            code: String::from("200"),
+            data: services,
+        }),
         Err(err) => HttpResponse::InternalServerError().body(err.to_string()),
     }
 }
