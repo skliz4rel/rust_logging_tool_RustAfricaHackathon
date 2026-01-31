@@ -1,6 +1,8 @@
 use chrono::Utc;
 use serde::Deserialize;
+use serde::Serialize;
 use std::error::Error;
+use std::fmt;
 use std::fs;
 use std::io::{self, BufRead};
 use std::path::PathBuf;
@@ -65,14 +67,32 @@ impl ALogFile {
     }
 }
 
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Directory {
     pub application_name: String,
     pub service_id: Option<String>,
     pub files: Vec<PathBuf>,
 }
 
+impl fmt::Display for Directory {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", serde_json::to_string(self).unwrap())
+    }
+}
+
 impl Directory {
+    pub async fn delete_files_in_dir(&self) {
+        if !self.files.is_empty() {
+            for path in self.files.iter() {
+                if path.exists() && path.is_file() {
+                    if let Err(e) = fs::remove_file(path) {
+                        println!("Failed to delete file {:?}: {}", path, e);
+                    }
+                }
+            }
+        }
+    }
+
     ///This module is going to read the directory for all the files that exits there
     pub fn read_dir(&mut self, app_name: &str, dir: &str) -> Result<(), Box<dyn Error>> {
         for entry in fs::read_dir(dir)? {
