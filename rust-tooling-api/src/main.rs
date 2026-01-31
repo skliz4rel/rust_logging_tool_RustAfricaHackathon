@@ -1,9 +1,10 @@
 use actix_web::web::Data;
-use actix_web::{App, HttpResponse, HttpServer, Responder, get};
+use actix_web::{App, HttpResponse, HttpServer,http::header, Responder, get};
 
 //You must register all your modules for it to be visible within your project
 mod routes;
 
+use actix_cors::Cors;
 use dal_layer::models::details::Details;
 
 use crate::routes::{health_check::*, log_routes::*, myservice_routes::*};
@@ -33,7 +34,7 @@ use utoipa::{
     components(
         schemas(
             LogRequest,
-            GenericResponse<LogRequest>,
+            GenericResponse<String>,
             MyServiceView,         
         )
     ),
@@ -75,8 +76,21 @@ async fn main() -> std::io::Result<()> {
     let db_data = Data::new(db);
 
     HttpServer::new(move || {
+            let cors = Cors::default()
+            .allowed_origin("http://localhost:5000")
+          //  .allowed_origin("https://localhost:5000")
+            .allowed_methods(vec!["GET", "POST","PUT","PATCH","DELETE"])
+            .allowed_headers(vec![
+                header::CONTENT_TYPE,
+                header::AUTHORIZATION,
+                header::ACCEPT,
+            ])
+            .supports_credentials();
+
+        //setting up the service and the endpoints
         App::new()
             .app_data(db_data.clone()) //register or inject the database obj
+             .wrap(cors)
             .service(hello)
             .service(health_check)
     .service(
@@ -85,9 +99,8 @@ async fn main() -> std::io::Result<()> {
          .config(
             Config::default() 
             .display_operation_id(true)     // 👈 KEEP TAG ORDER AS DEFINED
-        )
-        
-)
+        )        
+      )
             .service(create_service)
             .service(get_services)
             .service(create_log)
@@ -95,7 +108,7 @@ async fn main() -> std::io::Result<()> {
             .service(get_logs_services_by_date_range)
            
     })
-    .bind(("localhost", 5001))?
+    .bind(("localhost", 5000))?
     .run()
     .await
 }

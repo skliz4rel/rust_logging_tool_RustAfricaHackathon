@@ -8,7 +8,7 @@ use std::thread;
 use tokio;
 
 use tokio::signal;
-use tokio::time::{Duration, interval};
+use tokio::time::{Duration, MissedTickBehavior, interval, timeout};
 
 #[tokio::main]
 async fn main() {
@@ -30,18 +30,28 @@ async fn main() {
 
     println!("got here dir count {dir_count}");
 
+    start_log_worker(dir_count, list).await;
+}
+
+async fn start_log_worker(dir_count: usize, list: &Vec<Config>) {
     let mut ticker = interval(Duration::from_secs(60));
+    ticker.set_missed_tick_behavior(MissedTickBehavior::Skip);
 
     loop {
         tokio::select! {
             _ = ticker.tick() => {
                 if dir_count > 0 {
-                    println!("Reading Logs now from {:?}", list);
-                    multiple_transmitter_receiver(dir_count, &list).await;
+                    let job = multiple_transmitter_receiver(dir_count, &list);
+
+                    match timeout(Duration::from_secs(50), job).await {
+                        Ok(_) => println!("Logs uploaded successfully"),
+                        Ok(_) => eprintln!("Upload error:"),
+                        Err(_) => eprintln!("Upload timed out"),
+                    }
                 }
             }
             _ = signal::ctrl_c() => {
-                println!("Shutting down log worker...");
+                println!("Gracefully shutting down log worker...");
                 break;
             }
         }
