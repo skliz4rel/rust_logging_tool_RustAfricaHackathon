@@ -7,6 +7,9 @@ use std::sync::mpsc;
 use std::thread;
 use tokio;
 
+use tokio::signal;
+use tokio::time::{Duration, interval};
+
 #[tokio::main]
 async fn main() {
     ///Load the services stored in the database services from db
@@ -27,12 +30,21 @@ async fn main() {
 
     println!("got here dir count {dir_count}");
 
-    if dir_count > 0 {
-        //read_dir(&list[0].application_name, &list[0].log_location);
+    let mut ticker = interval(Duration::from_secs(60));
 
-        println!("configs to be worked on {:?}", list);
-
-        multiple_transmitter_receiver(dir_count, &list).await;
+    loop {
+        tokio::select! {
+            _ = ticker.tick() => {
+                if dir_count > 0 {
+                    println!("Reading Logs now from {:?}", list);
+                    multiple_transmitter_receiver(dir_count, &list).await;
+                }
+            }
+            _ = signal::ctrl_c() => {
+                println!("Shutting down log worker...");
+                break;
+            }
+        }
     }
 }
 
@@ -67,6 +79,7 @@ pub async fn multiple_transmitter_receiver(count: usize, list: &Vec<Config>) {
     //reciever thread
     for dir in rx {
         read_files_store_in_db(&dir).await;
+        dir.delete_files_in_dir().await;
     }
 }
 
@@ -75,6 +88,9 @@ async fn read_files_store_in_db(dir: &Directory) {
         application_name: dir.application_name.to_string(),
         logs_in_file: Vec::new(),
     };
+
+    println!("Directory content {}", dir);
+    println!("number of files in dir {}", &dir.files.len());
 
     for path in &dir.files {
         let id: &str = dir.service_id.as_ref().unwrap();
